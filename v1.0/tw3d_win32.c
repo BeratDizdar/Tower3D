@@ -14,9 +14,6 @@ typedef struct TwInstance {
 	TwBoolean is_active;
 	TwBoolean is_window_active;
 
-	LARGE_INTEGER performance_frequency;
-	LARGE_INTEGER last_counter;
-
 	TwUint width, height, x, y;
 	TwByte exit_key;
 	const char* title;
@@ -89,9 +86,6 @@ TW3D_API TwInstance* twCreateInstance(const TwInstanceDesc* desc) {
 	else {
 		inst->exit_key = desc->exit_key;
 	}
-
-	QueryPerformanceFrequency(&inst->performance_frequency);
-	QueryPerformanceCounter(&inst->last_counter);
 
 	inst->is_active = TW_TRUE;
 	return inst;
