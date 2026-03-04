@@ -1,8 +1,13 @@
 LIBRARY tw3d_win32.dll
 
 EXPORTS
+TwBindContextToSurface
 TwCreateInstance
-TwLoadVirtualTable
+TwCreateSurface
+TwDeleteInstance
+TwGetDeltaTime
+TwSwapBuffers
+TwUpdateSurface
 twCos
 twLerp
 twMatAdd
