@@ -86,15 +86,17 @@ typedef unsigned int TwID;
 
 typedef struct TwInstance TwInstance;
 
-TwInstance* TwCreateInstance();
-void TwDeleteInstance(TwInstance* inst);
+TwInstance* twCreateInstance();
+void twDeleteInstance(TwInstance* inst);
 
-bool_t TwCreateSurface(TwInstance* inst, const char* title);
-bool_t TwUpdateSurface(TwInstance* inst);
-f32_t TwGetDeltaTime(TwInstance* inst);
-void TwSwapBuffers(TwInstance* inst);
-void TwBindContextToSurface(TwInstance* inst, bool_t vsync);
+bool_t twCreateSurface(TwInstance* inst, const char* title);
+bool_t twUpdateSurface(TwInstance* inst);
+f32_t twGetDeltaTime(TwInstance* inst);
+void twSwapBuffers(TwInstance* inst);
+void twBindContextToSurface(TwInstance* inst, bool_t vsync);
 
+
+bool_t twKeyState(TwInstance* inst, i32_t key);
 /*
 bool_t (*KeyPressed)(TwInstance* inst, i32_t key);
 bool_t (*KeyReleased)(TwInstance* inst, i32_t key);
@@ -105,6 +107,26 @@ bool_t (*MouseLeft)(TwInstance* inst);
 bool_t (*MouseRight)(TwInstance* inst);
 */
 
+	// texture
+u32_t twLoadTexture(const char* filepath);
+	// render
+void twClearColorAndDepth();
+	// state
+void twContextViewport(i32_t x, i32_t y, i32_t width, i32_t height);
+	// shader
+u32_t twCompileVertexShader(const char* source);
+u32_t twCompileFragmentShader(const char* source);
+void twDeleteShader(u32_t shader);
+u32_t twCreateProgramVF(u32_t vs, u32_t fs);
+u32_t twCreateProgramVFBeforeDelete(u32_t vs, u32_t fs);
+void twDeleteProgram(u32_t prog);
+void twSendMat4ToProgram(u32_t prog, i32_t location, Mat4 mat);
+	// Vertex Array
+void twCreateVertexArrayAndBuffers(u32_t* vao, u32_t* vbo, i32_t vsize, const void* vdata, u32_t* eboi, i32_t esize, const void* edata);
+void twVertexArrayAttribute(u32_t vao, u32_t index, i32_t size, u32_t offset);
+void twVertexArrayBindBuffers(u32_t vao, u32_t vbo, i32_t stride, u32_t ebo);
+
+#pragma region MATEMATIK BOKU
 Mat4 twMatIdentity();
 Mat4 twMatZero();
 Mat4 twMatTranslate(Vec3 v);
@@ -133,5 +155,6 @@ float twSquareRoot(float n);
 float twSin(float a);
 float twCos(float a);
 float twRandom(float min, float max);
+#pragma endregion
 
 #endif // __tw3d_h_v1_6__

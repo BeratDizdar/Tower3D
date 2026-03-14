@@ -1,0 +1,1 @@
+tcc tw3d.c -shared -o tw3d.dll -v -luser32 -lgdi32 -lopengl32

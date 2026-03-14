@@ -15,7 +15,7 @@ unsigned int plane_inds[] = {
 
 int main() {
     TwInstance* inst = twCreateInstance();
-    twCreateSurfaceInMain(inst, "Tower 3D v1.5 - Ilk Kan");
+    twCreateSurfaceInMain(inst, "Tower 3D v1.5");
     twBindContextToSurface(inst);
     twSetSwapIntervals(inst, TW_TRUE);
     TwID ruleSolid = twCreateRuleInMainPool(inst, TW_TRUE, TW_FALSE, TW_FALSE);

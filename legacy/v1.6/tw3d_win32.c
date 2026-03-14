@@ -2,7 +2,12 @@
 #include "tw3d.h"
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include "include/glad/glad.h"
 #include <gl/GL.h>
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_ONLY_PNG
+#define STBI_NO_SIMD
+#include "../v1.5/stb_image.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -27,11 +32,11 @@ typedef struct TwInstance {
 
 #pragma region INSTANCE BOKU
 
-TW3D_API TwInstance* TwCreateInstance() {
+TW3D_API TwInstance* twCreateInstance() {
     TwInstance* inst = (TwInstance*)calloc(1, sizeof(TwInstance));
     return inst;
 }
-TW3D_API void TwDeleteInstance(TwInstance* inst) {
+TW3D_API void twDeleteInstance(TwInstance* inst) {
     if (!inst) return;
     if (inst->win32.context) {
         wglMakeCurrent(NULL, NULL);
@@ -56,7 +61,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT umessage, WPARAM wparam, LPARAM 
     default: return DefWindowProc(hwnd, umessage, wparam, lparam);
     }
 }
-TW3D_API bool_t TwCreateSurface(TwInstance* inst, const char* title) {
+TW3D_API bool_t twCreateSurface(TwInstance* inst, const char* title) {
     HINSTANCE module = GetModuleHandleA(NULL);
     WNDCLASSA wnd = { 0 };
     wnd.hInstance = module;
@@ -87,10 +92,10 @@ TW3D_API bool_t TwCreateSurface(TwInstance* inst, const char* title) {
     inst->win32.exit_key = 27;
     return TW_TRUE;
 }
-TW3D_API bool_t TwUpdateSurface(TwInstance* inst) {
+TW3D_API bool_t twUpdateSurface(TwInstance* inst) {
     return inst->win32.is_active;
 }
-TW3D_API f32_t TwGetDeltaTime(TwInstance* inst) {
+TW3D_API f32_t twGetDeltaTime(TwInstance* inst) {
     LARGE_INTEGER current_time;
     QueryPerformanceCounter(&current_time);
     float delta = (float)(current_time.QuadPart - inst->win32.last_time.QuadPart) / (float)inst->win32.timer_freq.QuadPart;
@@ -98,7 +103,7 @@ TW3D_API f32_t TwGetDeltaTime(TwInstance* inst) {
     if (delta > 0.1f) delta = 0.1f;
     return delta;
 }
-TW3D_API void TwSwapBuffers(TwInstance* inst) {
+TW3D_API void twSwapBuffers(TwInstance* inst) {
     SwapBuffers(inst->win32.device);
     MSG msg = { 0 };
     while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -108,7 +113,7 @@ TW3D_API void TwSwapBuffers(TwInstance* inst) {
     }
     if (GetAsyncKeyState(inst->win32.exit_key)) inst->win32.is_active = TW_FALSE;
 }
-TW3D_API void TwBindContextToSurface(TwInstance* inst, bool_t vsync) {
+TW3D_API void twBindContextToSurface(TwInstance* inst, bool_t vsync) {
     inst->win32.device = GetDC(inst->win32.handler);
     PIXELFORMATDESCRIPTOR pfd = { 0 };
     pfd.nSize = sizeof(pfd);
@@ -124,13 +129,92 @@ TW3D_API void TwBindContextToSurface(TwInstance* inst, bool_t vsync) {
     wglMakeCurrent(inst->win32.device, inst->win32.context);
 
 	((int(*)(int))wglGetProcAddress("wglSwapIntervalEXT"))(vsync);
+	gladLoadGL();
 }
 
 #pragma endregion
 
+TW3D_API bool_t twKeyState(TwInstance* inst, i32_t key) {
+	return GetAsyncKeyState(key);
+}
+
 #pragma region CONTEXT BOKU
 
+TW3D_API u32_t twLoadTexture(const char* filepath) {
+	int width, height, channels;
+	stbi_set_flip_vertically_on_load(1);
+	unsigned char* img_data = stbi_load(filepath, &width, &height, &channels, 4);
+	if (!img_data) { printf("HATA: test.png bulunamadi!\n"); return -1; }
 
+	u32_t tex;
+	glCreateTextures(GL_TEXTURE_2D, 1, &tex);
+
+	glTextureParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTextureParameteri(tex, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTextureParameteri(tex, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTextureParameteri(tex, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	glTextureStorage2D(tex, 1, GL_RGBA8, width, height);
+	glTextureSubImage2D(tex, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, img_data);
+	stbi_image_free(img_data);
+	return tex;
+}
+TW3D_API void twClearColorAndDepth() {
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+TW3D_API void twContextViewport(i32_t x, i32_t y, i32_t width, i32_t height) {
+	glViewport(x, y, width, height);
+}
+TW3D_API u32_t twCompileVertexShader(const char* source) {
+	u32_t vs = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vs, 1, &source, NULL);
+	glCompileShader(vs);
+	return vs;
+}
+TW3D_API u32_t twCompileFragmentShader(const char* source) {
+	u32_t fs = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fs, 1, &source, NULL);
+	glCompileShader(fs);
+	return fs;
+}
+TW3D_API void twDeleteShader(u32_t shader) {
+	glDeleteShader(shader);
+}
+TW3D_API u32_t twCreateProgramVF(u32_t vs, u32_t fs) {
+	u32_t prog = glCreateProgram();
+	glAttachShader(prog, vs);
+	glAttachShader(prog, fs);
+	glLinkProgram(prog);
+	return prog;
+}
+TW3D_API u32_t twCreateProgramVFBeforeDelete(u32_t vs, u32_t fs) {
+	u32_t prog = twCreateProgramVF(vs, fs);
+	twDeleteShader(vs);
+	twDeleteShader(fs);
+	return prog;
+}
+TW3D_API void twDeleteProgram(u32_t prog) {
+	glDeleteProgram(prog);
+}
+TW3D_API void twSendMat4ToProgram(u32_t prog, i32_t location, Mat4 mat) {
+	glProgramUniformMatrix4fv(prog, location, 1, GL_FALSE, mat.m);
+}
+TW3D_API void twCreateVertexArrayAndBuffers(u32_t* vao, u32_t* vbo, i32_t vsize, const void* vdata, u32_t* ebo, i32_t esize, const void* edata) {
+	glCreateVertexArrays(1, vao);
+	glCreateBuffers(1, vbo);
+	glCreateBuffers(1, ebo);
+	glNamedBufferStorage(*vbo, vsize, vdata, 0);
+	glNamedBufferStorage(*ebo, esize, edata, 0);
+}
+TW3D_API void twVertexArrayAttribute(u32_t vao, u32_t index, i32_t size, u32_t offset) {
+	glEnableVertexArrayAttrib(vao, index);
+	glVertexArrayAttribFormat(vao, index, size, GL_FLOAT, GL_FALSE, offset * sizeof(f32_t));
+	glVertexArrayAttribBinding(vao, index, 0);
+}
+TW3D_API void twVertexArrayBindBuffers(u32_t vao, u32_t vbo, i32_t stride, u32_t ebo) {
+	glVertexArrayVertexBuffer(vao, 0, vbo, 0, stride * sizeof(f32_t));
+	glVertexArrayElementBuffer(vao, ebo);
+}
 
 #pragma endregion
 
