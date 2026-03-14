@@ -43,7 +43,7 @@ i32 twSurfaceActive(TwInstance* inst);
 void twGetSurfaceSize(TwInstance* inst, i32* width, i32* height);
 void twUpdateSurface(TwInstance* inst);
 void* twGetSurfaceHandler(TwInstance* inst); // d3d
-void twGLBindContext(TwInstance* inst); // gl
+void twGLBindContext(TwInstance* inst, b32 vsync); // gl
 void twGLSwapBuffers(TwInstance* inst); // gl
 f32 twGetDeltaTime(TwInstance* inst);
 

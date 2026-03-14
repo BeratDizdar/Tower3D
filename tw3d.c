@@ -148,7 +148,7 @@ TW3D_API void twUpdateSurface(TwInstance* inst) {
 
 TW3D_API void* twGetSurfaceHandler(TwInstance* inst) { return (void*)inst->win32.handler; }
 
-TW3D_API void twGLBindContext(TwInstance* inst) {
+TW3D_API void twGLBindContext(TwInstance* inst, b32 vsync) {
     inst->win32.device = GetDC(inst->win32.handler);
     PIXELFORMATDESCRIPTOR pfd = { 0 };
     pfd.nSize = sizeof(pfd);
@@ -162,6 +162,8 @@ TW3D_API void twGLBindContext(TwInstance* inst) {
     SetPixelFormat(inst->win32.device, pf, &pfd);
     inst->win32.context = wglCreateContext(inst->win32.device);
     wglMakeCurrent(inst->win32.device, inst->win32.context);
+
+    ((int(*)(int))wglGetProcAddress("wglSwapIntervalEXT"))(vsync);
 }
 
 TW3D_API void twGLSwapBuffers(TwInstance* inst) {

@@ -4,7 +4,7 @@
 int main() {
 	TwInstance* inst = twCreateInstance();
 	twCreateSurface(inst, "Tower3D");
-	twGLBindContext(inst);
+	twGLBindContext(inst, 1);
 
 	while (twSurfaceActive(inst)) {
         twUpdateSurface(inst);
